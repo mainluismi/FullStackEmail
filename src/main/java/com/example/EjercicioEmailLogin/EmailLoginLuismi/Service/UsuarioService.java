@@ -31,4 +31,8 @@ public class UsuarioService {
     public List<Usuario> obtenerUsuariosVerificados(boolean estaVerificado){
         return usuaRioRepository.findByVerificado(estaVerificado);
     }
+
+    public Usuario guardarUsuario(Usuario usuario){
+        return usuaRioRepository.save(usuario);
+    }
 }
