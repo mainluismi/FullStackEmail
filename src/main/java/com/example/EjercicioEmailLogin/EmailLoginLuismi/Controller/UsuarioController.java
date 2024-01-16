@@ -37,41 +37,60 @@ public class UsuarioController {
     }
 
     @PostMapping("/guardarUsuario")
-    public String guardarUsuario(@ModelAttribute Usuario usuario){
-        String codigoVerificacion = emailService.enviarCodigoVerificacion(usuario.getEmail());
-       codigoAlmacenado = codigoVerificacion;
-        Usuario usuarioGuardado = usuarioService.guardarUsuario(usuario);
-        return "redirect:/home";
+    public String guardarUsuario(@ModelAttribute Usuario usuario, @RequestParam(name = "email", required = false, defaultValue = "") String email, Model model) {
+        if (email.isEmpty()) {
+            // El parámetro email no está presente en la solicitud
+            // Puedes manejar este caso según tus necesidades, por ejemplo, mostrando un mensaje de error
+            System.err.println("El parámetro 'email' no está presente en la solicitud.");
+            return "redirect:/error";  // Puedes redirigir a una página de error o hacer cualquier otra cosa
+        }
+
+        // Generar y enviar el código de verificación
+        String codigoVerificacion = emailService.enviarCodigoVerificacion(email);
+        System.err.println(codigoVerificacion);
+        System.err.println(email);
+
+        // Almacenar el código de verificación junto con el usuario (pero no guardarlo en la base de datos)
+        usuario.setCodigoVerificacion(codigoVerificacion);
+        // Almacena el usuario en el modelo para que se pueda utilizar en la vista de confirmación
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("email", email);
+
+        // Redirigir a la página de confirmación con el correo del usuario
+        return "redirect:/confirmacionCorreo";
     }
 
-    @GetMapping("/confirmacionCorreo")
-    public String mostrarFormularioConfirmacion(Model model) {
-        // Puedes generar y almacenar un código de verificación en tu lógica de negocio aquí
-        // y luego pasarlo al modelo para que se muestre en el formulario.
-        model.addAttribute("codigoVerificacion", codigoAlmacenado); // Reemplaza esto con tu lógica de generación de código.
 
+
+
+    @GetMapping("/confirmacionCorreo")
+    public String mostrarFormularioConfirmacion(@RequestParam("email") String email, Model model) {
+        // Almacena el email en el modelo para que se pueda utilizar en la vista de confirmación
+        model.addAttribute("usuario", new Usuario(email));
         return "confirmacionCorreo";
     }
     //Metodo auxiliar, no se si esta bien
 
     @PostMapping("/confirmarCorreo")
-    public String confirmarCorreo(@RequestParam("codigoVerificacion") String codigoVerificacion, Model model) {
-        // Aquí puedes validar el código de verificación y realizar las acciones necesarias.
-        // Puedes utilizar el servicio de usuario para activar la cuenta o realizar otras operaciones.
+    public String confirmarCorreo(@RequestParam("codigoVerificacion") String codigoVerificacion, @RequestParam("email") String email, Model model) {
+        // Obtener el usuario por el correo
+        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+        System.err.println(codigoVerificacion);
+        System.err.println(email);
 
-        if (codigoAlmacenado.equals(codigoVerificacion)) { // Reemplaza con tu lógica de validación.
-            // Acciones después de la confirmación exitosa (por ejemplo, activar la cuenta).
-            System.out.println("Verificacion CORRECTA");
+        // Verificar el código de verificación
+        if (usuario != null && codigoVerificacion.equals(usuario.getCodigoVerificacion())) {
+            // Guardar el usuario en la base de datos después de la confirmación exitosa
+            usuarioService.guardarUsuario(usuario);
             return "redirect:/home";
         } else {
             // Código de verificación incorrecto, muestra un mensaje de error en la misma vista.
             model.addAttribute("error", "Código de verificación incorrecto");
-            model.addAttribute("codigoVerificacion", codigoVerificacion); // Puedes volver a mostrar el código ingresado
-            System.out.println("Verificacion INCORRECTA");
-
             return "confirmacionCorreo";
         }
     }
+
+
 
 
 }

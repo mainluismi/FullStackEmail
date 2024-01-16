@@ -32,6 +32,11 @@ public class UsuarioService {
         return usuaRioRepository.findByVerificado(estaVerificado);
     }
 
+    public Usuario obtenerUsuarioPorEmail(String email) {
+        // Implementa la lógica para obtener un usuario por su correo electrónico
+        return usuaRioRepository.findByEmail(email);
+    }
+
     public Usuario guardarUsuario(Usuario usuario){
         return usuaRioRepository.save(usuario);
     }

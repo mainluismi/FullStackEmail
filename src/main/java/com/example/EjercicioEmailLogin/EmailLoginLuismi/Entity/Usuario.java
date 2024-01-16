@@ -27,6 +27,9 @@ public class Usuario {
     @Column(name = "verificado")
     private boolean verificado;
 
+    public Usuario(String email) {
+    }
+
     public Long getId() {
         return id;
     }
