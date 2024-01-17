@@ -8,8 +8,6 @@ import lombok.Setter;
 
 @Entity
 @Table(name= "usuarios")
-@AllArgsConstructor
-@NoArgsConstructor
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +24,10 @@ public class Usuario {
     private String codigoVerificacion;
     @Column(name = "verificado")
     private boolean verificado;
+
+
+    public Usuario() {
+    }
 
     public Usuario(String email) {
     }

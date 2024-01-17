@@ -89,12 +89,14 @@ public class UsuarioController {
     @PostMapping("/confirmarCorreo")
     public String confirmarCorreo(@RequestParam("codigoVerificacion") String codigoVerificacion,
                                   @RequestParam("email") String email,
-                                  Model model) {
+                                  Model model, @ModelAttribute Usuario usuario) {
+        email = usuario.getEmail();
+
         try {
             // Obtener el usuario por el correo
-            Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+            //Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
 
-            if (usuario != null) {
+            if (email != null) {
                 String codigoAlmacenado = usuario.getCodigoVerificacion(); // Obtener el código almacenado
 
                 if (codigoVerificacion.equals(codigoAlmacenado)) {
