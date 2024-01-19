@@ -36,9 +36,16 @@ public class UsuarioController {
         return "formularioRegistro";
     }
 
+    /*
     @PostMapping("/guardarUsuario")
-    public String guardarUsuario(@ModelAttribute Usuario usuario, @RequestParam(name = "email", required = false, defaultValue = "") String email, Model model) {
+    public String guardarUsuario(@ModelAttribute Usuario usuario, @RequestParam(name = "email", required = false, defaultValue = "") String email,
+                                 @RequestParam(name = "nombre", required = false, defaultValue = "") String nombre,
+                                 @RequestParam(name = "apellidos", required = false, defaultValue = "") String apellidos,
+                                 @RequestParam(name = "password", required = false, defaultValue = "") String password, Model model) {
         email = usuario.getEmail();
+        nombre = usuario.getNombre();
+        apellidos = usuario.getApellidos();
+        password = usuario.getPassword();
         if (email.isEmpty()) {
             // El parámetro email no está presente en la solicitud
             // Puedes manejar este caso según tus necesidades, por ejemplo, mostrando un mensaje de error
@@ -50,47 +57,69 @@ public class UsuarioController {
         String codigoVerificacion = emailService.enviarCodigoVerificacion(email);
         System.err.println(codigoVerificacion);
         System.err.println(email);
+        System.err.println(nombre);
+        System.err.println(apellidos);
+        System.err.println(password);
 
         // Almacenar el código de verificación junto con el usuario (pero no guardarlo en la base de datos)
         usuario.setCodigoVerificacion(codigoVerificacion);
+        usuario.setEmail(email);
+        usuario.setNombre(nombre);
+        usuario.setApellidos(apellidos);
+        usuario.setPassword(password);
+
         // Almacena el usuario en el modelo para que se pueda utilizar en la vista de confirmación
         model.addAttribute("usuario", usuario);
         model.addAttribute("email", email);
+        model.addAttribute("nombre", nombre);
+        model.addAttribute("apellidos", apellidos);
+        model.addAttribute("password", password);
 
         // Devolver el nombre de la vista en lugar de realizar una redirección
         return "confirmacionCorreo";
     }
+     */
 
+    @PostMapping("/confirmarCorreo")
+    public String confirmarCorreo(@ModelAttribute Usuario usuario, Model model) {
+        try {
+            // Verificar si el email está presente en la solicitud
+            if (usuario.getEmail() == null || usuario.getEmail().isEmpty()) {
+                System.err.println("El parámetro 'email' no está presente en la solicitud.");
+                return "redirect:/error";
+            }
 
+            // Generar y enviar el código de verificación
+            String codigoVerificacion = emailService.enviarCodigoVerificacion(usuario.getEmail());
+            System.err.println(codigoVerificacion);
 
+            // Almacenar el código de verificación junto con el usuario (pero no guardarlo en la base de datos)
+            usuario.setCodigoVerificacion(codigoVerificacion);
 
+            // Almacena el usuario en el modelo para que se pueda utilizar en la vista de confirmación
+            model.addAttribute("usuario", usuario);
+            model.addAttribute("email", usuario.getEmail());
 
-    @GetMapping("/confirmacionCorreo")
-    public String mostrarFormularioConfirmacion(@RequestParam("email") String email, Model model) {
-        // Utiliza el usuario del modelo en lugar de crear uno nuevo
-        Usuario usuario = (Usuario) model.getAttribute("usuario");
+            // Guardar el usuario en la base de datos
+            //usuarioService.guardarUsuario(usuario);
 
-        if (usuario == null) {
-            // Maneja el caso cuando el usuario es nulo, por ejemplo, redirigiendo a una página de error
-            return "redirect:/error";
+            // Devolver el nombre de la vista en lugar de realizar una redirección
+            return "confirmacionCorreo";
+        } catch (Exception e) {
+            // Manejar excepciones generales aquí, puedes registrar el error utilizando el sistema de registro de Spring
+            // También puedes agregar un mensaje de error adicional al modelo si es necesario
+            model.addAttribute("error", "Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
+            return "error"; // Ajusta esto según tu manejo de errores
         }
-
-        // Actualiza el email del usuario con el valor recibido
-        usuario.setEmail(email);
-
-        // Almacena el usuario actualizado en el modelo
-        model.addAttribute("usuario", usuario);
-
-        return "confirmacionCorreo";
     }
 
     //Metodo auxiliar, no se si esta bien
 
-    @PostMapping("/confirmarCorreo")
-    public String confirmarCorreo(@RequestParam("codigoVerificacion") String codigoVerificacion,
+    @PostMapping("/guardarUsuario")
+    public String guardarUsuario(@RequestParam("codigoVerificacion") String codigoVerificacion,
                                   @RequestParam("email") String email,
                                   Model model, @ModelAttribute Usuario usuario) {
-        email = usuario.getEmail();
+        //email = usuario.getEmail();
 
         try {
             // Obtener el usuario por el correo
@@ -102,6 +131,11 @@ public class UsuarioController {
                 if (codigoVerificacion.equals(codigoAlmacenado)) {
                     // Actualizar el estado de verificación y guardar el usuario en la base de datos después de la confirmación exitosa
                     usuario.setVerificado(true);
+                    model.addAttribute("usuario", usuario);
+                    System.err.println("El nombre del usuario es:"+usuario.getNombre());
+                    System.err.println("El correo del usuario es:"+usuario.getEmail());
+                    System.err.println("Los apellidos del usuario son:"+usuario.getApellidos());
+                    System.err.println("La contraseña del usuario es:"+usuario.getPassword());
                     usuarioService.guardarUsuario(usuario);
                     model.addAttribute("confirmacionExitosa", true);
                     return "confirmacionCorreo";  // o la vista que uses para confirmación exitosa
@@ -120,6 +154,25 @@ public class UsuarioController {
         }
 
         return "confirmacionCorreo";  // o la vista que usas para mostrar el formulario de confirmación
+    }
+
+    @GetMapping("/confirmacionCorreo")
+    public String mostrarFormularioConfirmacion(@RequestParam("email") String email, Model model) {
+        // Utiliza el usuario del modelo en lugar de crear uno nuevo
+        Usuario usuario = (Usuario) model.getAttribute("usuario");
+
+        if (usuario == null) {
+            // Maneja el caso cuando el usuario es nulo, por ejemplo, redirigiendo a una página de error
+            return "redirect:/error";
+        }
+
+        // Actualiza el email del usuario con el valor recibido
+        usuario.setEmail(email);
+
+        // Almacena el usuario actualizado en el modelo
+        model.addAttribute("usuario", usuario);
+
+        return "confirmacionCorreo";
     }
 
 }
