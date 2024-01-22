@@ -40,4 +40,16 @@ public class UsuarioService {
     public Usuario guardarUsuario(Usuario usuario){
         return usuaRioRepository.save(usuario);
     }
+
+    public Usuario autenticarUsuario(String email, String password) {
+        // Busca al usuario por su correo electrónico en la base de datos
+        Usuario usuario = usuaRioRepository.findByEmail(email);
+
+        // Verifica si el usuario existe y la contraseña coincide
+        if (usuario != null && usuario.getPassword().equals(password)) {
+            return usuario; // Usuario autenticado con éxito
+        } else {
+            return null; // Autenticación fallida
+        }
+    }
 }
