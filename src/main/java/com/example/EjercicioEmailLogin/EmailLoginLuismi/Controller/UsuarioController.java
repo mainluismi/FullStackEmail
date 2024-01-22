@@ -26,7 +26,8 @@ public class UsuarioController {
         this.emailService = emailService;
     }
     @GetMapping("/home")
-    public String logUsuario(){
+    public String logUsuario(Model model){
+        model.addAttribute("titulo","Registro de Usuario");
         return "home";
     }
 
@@ -43,6 +44,16 @@ public class UsuarioController {
             if (usuario.getEmail() == null || usuario.getEmail().isEmpty()) {
                 System.err.println("El parámetro 'email' no está presente en la solicitud.");
                 return "redirect:/error";
+            }
+
+            // Verificar si el email ya existe en la base de datos
+            Usuario usuarioExistente = usuarioService.findByEmail(usuario.getEmail());
+
+            if (usuarioExistente != null) {
+                // Si el email ya existe, mostrar un mensaje de error y redirigir de nuevo al formulario de registro
+                System.err.println("No se pudo guardar, email existente");
+                model.addAttribute("error", "Error: el email ya existe");
+                return "formularioRegistro";
             }
 
             // Generar y enviar el código de verificación
@@ -144,7 +155,7 @@ public class UsuarioController {
             return "inicioSesion";
         } else {
             // Si la autenticación falla, puedes mostrar un mensaje de error en la página de inicio
-            model.addAttribute("error", "Correo o contraseña incorrectos");
+            model.addAttribute("titulo", "Correo o contraseña incorrectos");
             return "home";
         }
     }

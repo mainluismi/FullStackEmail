@@ -72,7 +72,7 @@
 
     <div>
       <label for="email">Email:</label>
-      <input type="email" id="email" name="email" th:field="*{email}" required>
+      <input th:text="${error}" type="email" id="email" name="email" th:field="*{email}" required>
     </div>
 
     <div>

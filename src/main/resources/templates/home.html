@@ -59,7 +59,7 @@
 <body>
 <div class="formulario">
     <form id="registroForm" method="post" th:action="@{/formularioRegistro}">
-        <h1 class="titulo-home">Registro de Usuario</h1>
+        <h1 th:text="${titulo}" class="titulo-home">Registro de Usuario</h1>
         <div class="form-group">
             <label for="exampleInputEmail1">Email</label>
             <input type="email" class="form-control" id="exampleInputEmail1" name="email" aria-describedby="emailHelp" placeholder="Email">
