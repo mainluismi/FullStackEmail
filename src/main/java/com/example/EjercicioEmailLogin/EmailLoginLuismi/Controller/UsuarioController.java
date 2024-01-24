@@ -105,7 +105,7 @@ public class UsuarioController {
                     System.err.println("La contraseña del usuario es:"+usuario.getPassword());
                     usuarioService.guardarUsuario(usuario);
                     model.addAttribute("confirmacionExitosa", true);
-                    return "confirmacionCorreo";  // o la vista que uses para confirmación exitosa
+                    return "redirect:/home";
                 } else {
                     // Código de verificación incorrecto, muestra un mensaje de error en la misma vista.
                     model.addAttribute("error", "Código de verificación incorrecto. Debería ser: " + codigoAlmacenado);
@@ -139,13 +139,17 @@ public class UsuarioController {
         // Almacena el usuario actualizado en el modelo
         model.addAttribute("usuario", usuario);
 
-        return "confirmacionCorreo";
+        return "redirect:/home";
     }
 
     @PostMapping("/inicioSesion")
     public String iniciarSesion(@RequestParam("email") String email,
                                 @RequestParam("password") String password,
                                 Model model) {
+        //Si el usuario se registra con admin y admin puede tener acceso a los datos de los usuarios
+        if (usuarioService.verificarAdmin(email, password)){
+            return "admin";
+        }
         // Intenta autenticar al usuario usando el servicio de usuario
         Usuario usuarioAutenticado = usuarioService.autenticarUsuario(email, password);
 

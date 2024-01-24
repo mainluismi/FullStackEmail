@@ -52,4 +52,11 @@ public class UsuarioService {
             return null; // Autenticación fallida
         }
     }
+
+    public boolean verificarAdmin(String email, String password){
+        if(email.equals("admin@admin.com") && password.equals("admin")){
+            return true;
+        }
+        return false;
+    }
 }
