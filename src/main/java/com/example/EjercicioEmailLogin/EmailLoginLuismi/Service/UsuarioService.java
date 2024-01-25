@@ -2,6 +2,7 @@ package com.example.EjercicioEmailLogin.EmailLoginLuismi.Service;
 
 import com.example.EjercicioEmailLogin.EmailLoginLuismi.Entity.Usuario;
 import com.example.EjercicioEmailLogin.EmailLoginLuismi.Repository.UsuarioRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -62,5 +63,16 @@ public class UsuarioService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public void eliminarUsuarioPorEmail(String email) {
+        // Buscar el usuario por su email
+        Usuario usuario = usuaRioRepository.findByEmail(email);
+
+        // Verificar si el usuario existe antes de intentar eliminarlo
+        if (usuario != null) {
+            usuaRioRepository.delete(usuario);
+        }
     }
 }

@@ -27,7 +27,7 @@
 <body class="cuerpo-contenedor">
 <div class="contenedor-tabla">
   <h1>Buenas administrador!</h1>
-  <table class="table table-dark table-striped">
+  <table class="table table-dark table-striped" >
     <thead>
     <tr>
       <th scope="col">ID</th>
@@ -38,13 +38,18 @@
     </tr>
     </thead>
     <tbody>
-      <tr th:each="usuario : ${listaUsuarios}">
-        <th th:text="${usuario.id}"></th>
-        <th th:text="${usuario.nombre}"></th>
-        <th th:text="${usuario.apellidos}"></th>
-        <th th:text="${usuario.email}"></th>
-        <th><button type="button" class="btn btn-primary">Editar</button> <button type="button" class="btn btn-danger">Eliminar</button></th>
-      </tr>
+    <tr th:each="usuario : ${listaUsuarios}">
+      <th th:text="${usuario.id}"></th>
+      <th th:text="${usuario.nombre}"></th>
+      <th th:text="${usuario.apellidos}"></th>
+      <th th:text="${usuario.email}"></th>
+      <th>
+        <form th:action="@{/admin}" method="get">
+          <input type="hidden" name="email" th:value="${usuario.email}" />
+          <button type="submit" class="btn btn-danger">Eliminar</button>
+        </form>
+      </th>
+    </tr>
     </tbody>
   </table>
 </div>

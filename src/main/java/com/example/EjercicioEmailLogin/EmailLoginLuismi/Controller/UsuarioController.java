@@ -67,8 +67,14 @@ public class UsuarioController {
             model.addAttribute("usuario", usuario);
             model.addAttribute("email", usuario.getEmail());
 
+            // Guardar el usuario en la base de datos
+            //usuarioService.guardarUsuario(usuario);
+
+            // Devolver el nombre de la vista en lugar de realizar una redirección
             return "confirmacionCorreo";
         } catch (Exception e) {
+            // Manejar excepciones generales aquí, puedes registrar el error utilizando el sistema de registro de Spring
+            // También puedes agregar un mensaje de error adicional al modelo si es necesario
             model.addAttribute("error", "Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
             return "error"; // Ajusta esto según tu manejo de errores
         }
@@ -80,8 +86,12 @@ public class UsuarioController {
     public String guardarUsuario(@RequestParam("codigoVerificacion") String codigoVerificacion,
                                   @RequestParam("email") String email,
                                   Model model, @ModelAttribute Usuario usuario) {
+        //email = usuario.getEmail();
 
         try {
+            // Obtener el usuario por el correo
+            //Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+
             if (email != null) {
                 String codigoAlmacenado = usuario.getCodigoVerificacion(); // Obtener el código almacenado
 
@@ -101,13 +111,16 @@ public class UsuarioController {
                     model.addAttribute("error", "Código de verificación incorrecto. Debería ser: " + codigoAlmacenado);
                 }
             } else {
+                // Manejar el caso en que no se encuentra el usuario por el correo
                 model.addAttribute("error", "Usuario no encontrado");
             }
         } catch (Exception e) {
+            // Manejar excepciones generales aquí, puedes registrar el error utilizando el sistema de registro de Spring
+            // También puedes agregar un mensaje de error adicional al modelo si es necesario
             model.addAttribute("error", "Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
         }
 
-        return "confirmacionCorreo";
+        return "confirmacionCorreo";  // o la vista que usas para mostrar el formulario de confirmación
     }
 
     @GetMapping("/confirmacionCorreo")
@@ -135,7 +148,7 @@ public class UsuarioController {
                                 Model model) {
         //Si el usuario se registra con admin y admin puede tener acceso a los datos de los usuarios
         if (usuarioService.verificarAdmin(email, password)){
-            model.addAttribute("listaUsuarios", usuarioService.obtenerTodosLosUsuarios());
+            model.addAttribute("listaUsuarios",usuarioService.obtenerTodosLosUsuarios());
             return "admin";
         }
         // Intenta autenticar al usuario usando el servicio de usuario
@@ -151,4 +164,13 @@ public class UsuarioController {
             return "home";
         }
     }
+
+    @GetMapping("/admin")
+    public String eliminarUsuarioByAdmin(@RequestParam("email") String emailUsuario, Model model){
+        usuarioService.eliminarUsuarioPorEmail(emailUsuario);
+        model.addAttribute("listaUsuarios",usuarioService.obtenerTodosLosUsuarios());
+
+        return "admin";
+    }
+
 }
