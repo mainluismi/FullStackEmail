@@ -12,4 +12,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     List<Usuario> findAll();
     Usuario findById(long id);
     List<Usuario> findByVerificado(boolean estaVerificado);
+
+    Usuario deleteByEmail(String email);
 }

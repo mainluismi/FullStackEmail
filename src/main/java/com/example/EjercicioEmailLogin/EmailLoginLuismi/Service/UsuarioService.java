@@ -20,6 +20,10 @@ public class UsuarioService {
         return usuaRioRepository.findByEmail(email);
     }
 
+    public Usuario deleteByEmail(String email){
+        return usuaRioRepository.deleteByEmail(email);
+    }
+
     public Usuario obtenerUsuarioPorId(Long id){
         return usuaRioRepository.findById(id).orElse(null);
     }
