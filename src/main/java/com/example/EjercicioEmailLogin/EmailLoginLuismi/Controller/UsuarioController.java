@@ -5,172 +5,113 @@ import com.example.EjercicioEmailLogin.EmailLoginLuismi.Entity.Usuario;
 import com.example.EjercicioEmailLogin.EmailLoginLuismi.Service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.origin.SystemEnvironmentOrigin;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.List;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:4200")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final EmailService emailService;
-    private String codigoAlmacenado;
-
 
     @Autowired
     public UsuarioController(UsuarioService usuarioService, EmailService emailService) {
         this.usuarioService = usuarioService;
         this.emailService = emailService;
     }
-    @GetMapping("/home")
-    public String logUsuario(Model model){
-        model.addAttribute("titulo","Registro de Usuario");
-        return "home";
-    }
-
-    @PostMapping("/formularioRegistro")
-    public String mostrarFormularioRegistro(Model model) {
-        model.addAttribute("usuario", new Usuario());
-        return "formularioRegistro";
-    }
 
     @PostMapping("/confirmarCorreo")
-    public String confirmarCorreo(@ModelAttribute Usuario usuario, Model model) {
+    public ResponseEntity<?> confirmarCorreo(@RequestBody Usuario usuario) {
         try {
-            // Verificar si el email está presente en la solicitud
             if (usuario.getEmail() == null || usuario.getEmail().isEmpty()) {
-                System.err.println("El parámetro 'email' no está presente en la solicitud.");
-                return "redirect:/error";
+                return ResponseEntity.badRequest().body("El parámetro 'email' no está presente en la solicitud.");
             }
 
-            // Verificar si el email ya existe en la base de datos
+
+            // Verificar si el correo electrónico ya existe en la base de datos
             Usuario usuarioExistente = usuarioService.findByEmail(usuario.getEmail());
-
             if (usuarioExistente != null) {
-                // Si el email ya existe, mostrar un mensaje de error y redirigir de nuevo al formulario de registro
-                System.err.println("No se pudo guardar, email existente");
-                model.addAttribute("error", "Error: el email ya existe");
-                return "formularioRegistro";
+                return ResponseEntity.badRequest().body("Error: el email ya existe");
             }
 
-            // Generar y enviar el código de verificación
             String codigoVerificacion = emailService.enviarCodigoVerificacion(usuario.getEmail());
-            System.err.println(codigoVerificacion);
-
-            // Almacenar el código de verificación junto con el usuario (pero no guardarlo en la base de datos)
             usuario.setCodigoVerificacion(codigoVerificacion);
 
-            // Almacena el usuario en el modelo para que se pueda utilizar en la vista de confirmación
-            model.addAttribute("usuario", usuario);
-            model.addAttribute("email", usuario.getEmail());
-
-            // Guardar el usuario en la base de datos
-            //usuarioService.guardarUsuario(usuario);
-
-            // Devolver el nombre de la vista en lugar de realizar una redirección
-            return "confirmacionCorreo";
+            return ResponseEntity.ok().body(usuario);
         } catch (Exception e) {
-            // Manejar excepciones generales aquí, puedes registrar el error utilizando el sistema de registro de Spring
-            // También puedes agregar un mensaje de error adicional al modelo si es necesario
-            model.addAttribute("error", "Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
-            return "error"; // Ajusta esto según tu manejo de errores
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
         }
     }
 
-    //Metodo auxiliar, no se si esta bien
 
-    @PostMapping("/guardarUsuario")
-    public String guardarUsuario(@RequestParam("codigoVerificacion") String codigoVerificacion,
-                                  @RequestParam("email") String email,
-                                  Model model, @ModelAttribute Usuario usuario) {
-        //email = usuario.getEmail();
-
+    @PostMapping("/verificarCodigo")
+    public ResponseEntity<?> verificarCodigo(@RequestParam("email") String email, @RequestParam("codigo") String codigo) {
         try {
-            // Obtener el usuario por el correo
-            //Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+            Usuario usuarioExistente = usuarioService.findByEmail(email);
+            if (usuarioExistente == null) {
+                return ResponseEntity.badRequest().body("Error: el usuario no existe");
+            }
 
-            if (email != null) {
-                String codigoAlmacenado = usuario.getCodigoVerificacion(); // Obtener el código almacenado
-
-                if (codigoVerificacion.equals(codigoAlmacenado)) {
-                    // Actualizar el estado de verificación y guardar el usuario en la base de datos después de la confirmación exitosa
-                    usuario.setVerificado(true);
-                    model.addAttribute("usuario", usuario);
-                    System.err.println("El nombre del usuario es:"+usuario.getNombre());
-                    System.err.println("El correo del usuario es:"+usuario.getEmail());
-                    System.err.println("Los apellidos del usuario son:"+usuario.getApellidos());
-                    System.err.println("La contraseña del usuario es:"+usuario.getPassword());
-                    usuarioService.guardarUsuario(usuario);
-                    model.addAttribute("confirmacionExitosa", true);
-                    return "redirect:/home";
-                } else {
-                    // Código de verificación incorrecto, muestra un mensaje de error en la misma vista.
-                    model.addAttribute("error", "Código de verificación incorrecto. Debería ser: " + codigoAlmacenado);
-                }
+            String codigoAlmacenado = usuarioExistente.getCodigoVerificacion();
+            if (codigoAlmacenado.equals(codigo)) {
+                return ResponseEntity.ok().body("Código de verificación correcto");
             } else {
-                // Manejar el caso en que no se encuentra el usuario por el correo
-                model.addAttribute("error", "Usuario no encontrado");
+                return ResponseEntity.badRequest().body("Código de verificación incorrecto");
             }
         } catch (Exception e) {
-            // Manejar excepciones generales aquí, puedes registrar el error utilizando el sistema de registro de Spring
-            // También puedes agregar un mensaje de error adicional al modelo si es necesario
-            model.addAttribute("error", "Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
         }
-
-        return "confirmacionCorreo";  // o la vista que usas para mostrar el formulario de confirmación
     }
 
-    @GetMapping("/confirmacionCorreo")
-    public String mostrarFormularioConfirmacion(@RequestParam("email") String email, Model model) {
-        // Utiliza el usuario del modelo en lugar de crear uno nuevo
-        Usuario usuario = (Usuario) model.getAttribute("usuario");
 
-        if (usuario == null) {
-            // Maneja el caso cuando el usuario es nulo, por ejemplo, redirigiendo a una página de error
-            return "redirect:/error";
+    @PostMapping("/guardarUsuario")
+    public ResponseEntity<?> guardarUsuario(@RequestBody Usuario usuario) {
+        try {
+            String codigoAlmacenado = usuario.getCodigoVerificacion();
+            if (codigoAlmacenado.equals(usuario.getCodigoVerificacion())) {
+                usuario.setVerificado(true);
+                usuarioService.guardarUsuario(usuario);
+                return ResponseEntity.ok().body("Usuario registrado correctamente");
+            } else {
+                return ResponseEntity.badRequest().body("Código de verificación incorrecto");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al procesar la solicitud. Por favor, inténtelo de nuevo.");
         }
-
-        // Actualiza el email del usuario con el valor recibido
-        usuario.setEmail(email);
-
-        // Almacena el usuario actualizado en el modelo
-        model.addAttribute("usuario", usuario);
-
-        return "redirect:/home";
     }
 
     @PostMapping("/inicioSesion")
-    public String iniciarSesion(@RequestParam("email") String email,
-                                @RequestParam("password") String password,
-                                Model model) {
-        //Si el usuario se registra con admin y admin puede tener acceso a los datos de los usuarios
-        if (usuarioService.verificarAdmin(email, password)){
-            model.addAttribute("listaUsuarios",usuarioService.obtenerTodosLosUsuarios());
-            return "admin";
-        }
-        // Intenta autenticar al usuario usando el servicio de usuario
-        Usuario usuarioAutenticado = usuarioService.autenticarUsuario(email, password);
-
+    public ResponseEntity<?> iniciarSesion(@RequestBody Usuario usuario) {
+        Usuario usuarioAutenticado = usuarioService.autenticarUsuario(usuario.getEmail(), usuario.getPassword());
         if (usuarioAutenticado != null) {
-            // Si el usuario está autenticado, puedes redirigirlo a la página de inicio de sesión exitosa
-            model.addAttribute("usuario", usuarioAutenticado);
-            return "inicioSesion";
+            return ResponseEntity.ok().body(usuarioAutenticado);
         } else {
-            // Si la autenticación falla, puedes mostrar un mensaje de error en la página de inicio
-            model.addAttribute("titulo", "Correo o contraseña incorrectos");
-            return "home";
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Correo o contraseña incorrectos");
         }
     }
 
     @GetMapping("/admin")
-    public String eliminarUsuarioByAdmin(@RequestParam("email") String emailUsuario, Model model){
+    public ResponseEntity<?> eliminarUsuarioByAdmin(@RequestParam("email") String emailUsuario) {
         usuarioService.eliminarUsuarioPorEmail(emailUsuario);
-        model.addAttribute("listaUsuarios",usuarioService.obtenerTodosLosUsuarios());
+        List<Usuario> listaUsuarios = usuarioService.obtenerTodosLosUsuarios();
+        return ResponseEntity.ok().body(listaUsuarios);
+    }
 
-        return "admin";
+    @GetMapping("/usuarios")
+    public ResponseEntity<?> obtenerTodosLosUsuarios() {
+        List<Usuario> listaUsuarios = usuarioService.obtenerTodosLosUsuarios();
+        if (listaUsuarios != null && !listaUsuarios.isEmpty()) {
+            return ResponseEntity.ok().body(listaUsuarios);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }
+

@@ -11,7 +11,7 @@
 	<groupId>com.example.EjercicioEmailLogin</groupId>
 	<artifactId>EmailLoginLuismi</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>EmailLoginLuismi</name>
+	<name>EmailLoginLuismiApi</name>
 	<description>Ejercicio de uso de email verification con login</description>
 	<properties>
 		<java.version>17</java.version>
