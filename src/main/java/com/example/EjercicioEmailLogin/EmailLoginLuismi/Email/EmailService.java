@@ -26,7 +26,7 @@ public class EmailService {
     public String enviarCodigoVerificacion(String email) {
         String codigoVerificacion = generarCodigoVerificacion();
         enviarCorreo(email, "Código de Verificación", "Su código de verificación es: " + codigoVerificacion);
-        System.out.println("Se ha enviado el correo perfectamente");
+        System.out.println("Se ha enviado el correo perfectamente: "+codigoVerificacion);
         return codigoVerificacion;
     }
 
