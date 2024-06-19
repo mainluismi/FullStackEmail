@@ -61,7 +61,6 @@ public class UsuarioController {
         }
     }
 
-    //falta arreglar que siempre es correcto el codigo de verificacion
     @PostMapping("/verificarCodigo")
     public ResponseEntity<?> verificarCodigo(@RequestBody Usuario usuario) {
         try {
@@ -90,14 +89,13 @@ public class UsuarioController {
                     nuevoUsuario.setNombre(nombre);
                     nuevoUsuario.setApellidos(apellidos);
                     nuevoUsuario.setPassword(password);
-                    nuevoUsuario.setVerificado(true); // Opcional: puedes definir si el usuario se verificó al registrarse
+                    nuevoUsuario.setVerificado(true);
                     usuarioService.guardarUsuario(nuevoUsuario);
                     return ResponseEntity.ok().body("{\"message\": \"Código de verificación correcto.\"}");
                 } else {
                     return ResponseEntity.badRequest().body("{\"error\": \"Código de verificación incorrecto.\"}");
                 }
             } else {
-                // Si el usuario no existe, crear uno nuevo con los datos proporcionados
 
                 return ResponseEntity.ok().body("{\"message\": \"Usuario creado y verificado correctamente.\"}");
             }
@@ -179,20 +177,6 @@ public class UsuarioController {
         } else {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    //Metodo auxiliar formularios
-    @PostMapping("/api/generate-form")
-    public String generateForm(@RequestBody List<String> questions) {
-        // Lógica para generar el formulario HTML basado en las preguntas
-        StringBuilder htmlForm = new StringBuilder("<form>");
-        for (String question : questions) {
-            htmlForm.append("<label>").append(question).append("</label>");
-            htmlForm.append("<input type=\"text\" required /><br>");
-        }
-        htmlForm.append("</form>");
-        System.out.println(htmlForm.toString());
-        return htmlForm.toString();
     }
 
 }
